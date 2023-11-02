@@ -6,10 +6,12 @@ export interface IUserService {
   create: (user: ICreateUserDto) => Promise<IPersistedUser>;
   findById: (userId: string) => Promise<Option<IPersistedUser>>;
   findByEmail: (email: string) => Promise<Option<IPersistedUser>>;
+  getAll: () => Promise<IPersistedUser[]>;
 }
 
 export abstract class UserService implements IUserService {
   abstract create: (user: ICreateUserDto) => Promise<IPersistedUser>;
   abstract findByEmail: (email: string) => Promise<Option<IPersistedUser>>;
   abstract findById: (userId: string) => Promise<Option<IPersistedUser>>;
+  abstract getAll: () => Promise<IPersistedUser[]>;
 }

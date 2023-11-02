@@ -11,6 +11,7 @@ export class PrismaService implements OnModuleDestroy {
     findByEmail: (email: string) =>
       prisma.user.findUnique({ where: { email } }),
     create: (user: ICreateUserDto) => prisma.user.create({ data: user }),
+    getAll: () => prisma.user.findMany(),
   };
 
   async onModuleDestroy() {

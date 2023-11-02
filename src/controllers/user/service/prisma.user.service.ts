@@ -1,8 +1,10 @@
+import { Injectable } from '@nestjs/common';
 import { fromNullable } from 'fp-ts/lib/Option';
 import { ICreateUserDto } from 'src/controllers/auth/types/ICreateUserDto';
 import { PrismaService } from 'src/persistence/prisma/prisma.service';
 import { IUserService } from './interface/IUserService';
 
+@Injectable()
 export class PrismaUserService implements IUserService {
   constructor(private readonly prismaService: PrismaService) {}
   create(user: ICreateUserDto) {
@@ -16,5 +18,9 @@ export class PrismaUserService implements IUserService {
   async findById(id: string) {
     const user = await this.prismaService.user.findById(id);
     return fromNullable(user);
+  }
+
+  async getAll() {
+    return this.prismaService.user.getAll();
   }
 }

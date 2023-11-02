@@ -9,13 +9,11 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() createUserDto: ICreateUserDto) {
-    // Implement registration logic using authService
     return this.authService.register(createUserDto);
   }
 
   @Post('login')
   async login(@Body() loginUserDto: ILoginUserDto) {
-    // Implement login logic using authService
     return this.authService.login(loginUserDto);
   }
 }
