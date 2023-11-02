@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 export class PrismaService implements OnModuleDestroy {
   constructor() {}
   user = {
+    findById: (id: string) => prisma.user.findUnique({ where: { id } }),
     findByEmail: (email: string) =>
       prisma.user.findUnique({ where: { email } }),
     create: (user: ICreateUserDto) => prisma.user.create({ data: user }),

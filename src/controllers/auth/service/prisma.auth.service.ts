@@ -4,8 +4,10 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/persistence/prisma/prisma.service';
+import { ITokenPayload } from '../types/IAuthEntity';
 import { ICreateUserDto } from '../types/ICreateUserDto';
 import { ILoginUserDto } from '../types/ILoginUserDto';
 import { IPersistedUser } from '../types/IPersistedUser';
@@ -14,7 +16,10 @@ import { IAuthService } from './interface/IAuthService';
 
 @Injectable()
 export class PrismaAuthService implements IAuthService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async register(createUserDto: ICreateUserDto) {
     const userToCreate = await toUserWithHashedPassword(createUserDto);
@@ -41,7 +46,12 @@ export class PrismaAuthService implements IAuthService {
     if (!passwordIsValid) {
       throw new UnauthorizedException('Invalid password');
     }
-    return toUserResponse(user);
+    const payload: ITokenPayload = {
+      userId: user.id,
+    };
+    return {
+      accessToken: this.jwtService.sign(payload),
+    };
   }
 }
 
