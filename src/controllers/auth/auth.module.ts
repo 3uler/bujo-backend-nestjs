@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { env } from 'process';
 import { PrismaModule } from 'src/persistence/prisma/prisma.module';
 import { UserModule } from '../user/user.module';
+import { AuthController } from './controller/auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthService } from './service/interface/IAuthService';
 import { PrismaAuthService } from './service/prisma.auth.service';
@@ -18,6 +19,7 @@ import { PrismaAuthService } from './service/prisma.auth.service';
     }),
     UserModule,
   ],
+  controllers: [AuthController],
   providers: [
     { provide: AuthService, useClass: PrismaAuthService },
     JwtStrategy,
