@@ -7,11 +7,11 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/persistence/prisma/prisma.service';
+import { CreateUserDto } from '../types/CreateUserDto';
 import { ITokenPayload } from '../types/IAuthEntity';
-import { ICreateUserDto } from '../types/ICreateUserDto';
-import { ILoginUserDto } from '../types/ILoginUserDto';
 import { IPersistedUser } from '../types/IPersistedUser';
 import { IUserResponseDto } from '../types/IUserResponseDto';
+import { LoginUserDto } from '../types/LoginUserDto';
 import { IAuthService } from './interface/IAuthService';
 
 @Injectable()
@@ -21,7 +21,7 @@ export class PrismaAuthService implements IAuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(createUserDto: ICreateUserDto) {
+  async register(createUserDto: CreateUserDto) {
     const userToCreate = await toUserWithHashedPassword(createUserDto);
     try {
       const persistedUser = await this.prismaService.user.create(userToCreate);
@@ -31,7 +31,7 @@ export class PrismaAuthService implements IAuthService {
     }
   }
 
-  async login(loginUserDto: ILoginUserDto) {
+  async login(loginUserDto: LoginUserDto) {
     const user = await this.prismaService.user.findByEmail(loginUserDto.email);
     if (!user) {
       throw new NotFoundException(
@@ -56,8 +56,8 @@ export class PrismaAuthService implements IAuthService {
 }
 
 const toUserWithHashedPassword = async (
-  user: ICreateUserDto,
-): Promise<ICreateUserDto> => {
+  user: CreateUserDto,
+): Promise<CreateUserDto> => {
   const hashedPassword = await bcrypt.hash(user.password, 10);
   return { ...user, password: hashedPassword };
 };

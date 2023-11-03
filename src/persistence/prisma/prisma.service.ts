@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { ICreateUserDto } from 'src/controllers/auth/types/ICreateUserDto';
+import { CreateUserDto } from 'src/controllers/auth/types/CreateUserDto';
 
 const prisma = new PrismaClient();
 @Injectable()
@@ -10,7 +10,7 @@ export class PrismaService implements OnModuleDestroy {
     findById: (id: string) => prisma.user.findUnique({ where: { id } }),
     findByEmail: (email: string) =>
       prisma.user.findUnique({ where: { email } }),
-    create: (user: ICreateUserDto) => prisma.user.create({ data: user }),
+    create: (user: CreateUserDto) => prisma.user.create({ data: user }),
     getAll: () => prisma.user.findMany(),
   };
 

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { fromNullable } from 'fp-ts/lib/Option';
-import { ICreateUserDto } from 'src/controllers/auth/types/ICreateUserDto';
+import { CreateUserDto } from 'src/controllers/auth/types/CreateUserDto';
 import { PrismaService } from 'src/persistence/prisma/prisma.service';
 import { IUserService } from './interface/IUserService';
 
 @Injectable()
 export class PrismaUserService implements IUserService {
   constructor(private readonly prismaService: PrismaService) {}
-  create(user: ICreateUserDto) {
+  create(user: CreateUserDto) {
     return this.prismaService.user.create(user);
   }
   async findByEmail(email: string) {
