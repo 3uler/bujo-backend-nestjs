@@ -1,11 +1,9 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { match } from 'fp-ts/lib/Option';
+import { identity, pipe } from 'fp-ts/lib/function';
+import { InternalException } from 'src/exceptions/InternalException';
 import { PrismaService } from 'src/persistence/prisma/prisma.service';
 import { CreateUserDto } from '../types/CreateUserDto';
 import { ITokenPayload } from '../types/IAuthEntity';
@@ -27,24 +25,23 @@ export class PrismaAuthService implements IAuthService {
       const persistedUser = await this.prismaService.user.create(userToCreate);
       return toUserResponse(persistedUser);
     } catch (e) {
-      throw new ConflictException('Email already exists.');
+      throw new InternalException('DuplicateEntity', 'Email already exists.');
     }
   }
 
   async login(loginUserDto: LoginUserDto) {
-    const user = await this.prismaService.user.findByEmail(loginUserDto.email);
-    if (!user) {
-      throw new NotFoundException(
-        `User not found for email: ${loginUserDto.email}`,
-      );
-    }
+    const user = pipe(
+      await this.prismaService.user.findByEmail(loginUserDto.email),
+      match(throwMissingUserException(loginUserDto.email), identity),
+    );
+
     const passwordIsValid = await bcrypt.compare(
       loginUserDto.password,
       user.password,
     );
 
     if (!passwordIsValid) {
-      throw new UnauthorizedException('Invalid password');
+      throw new InternalException('InvalidPassword', 'Invalid password');
     }
     const payload: ITokenPayload = {
       userId: user.id,
@@ -54,6 +51,13 @@ export class PrismaAuthService implements IAuthService {
     };
   }
 }
+
+const throwMissingUserException = (email: string) => () => {
+  throw new InternalException(
+    'MissingEntity',
+    `User not found for email: ${email}`,
+  );
+};
 
 const toUserWithHashedPassword = async (
   user: CreateUserDto,
