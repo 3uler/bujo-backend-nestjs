@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { match } from 'fp-ts/lib/Option';
-import { identity, pipe } from 'fp-ts/lib/function';
+import * as TE from 'fp-ts/lib/TaskEither';
+import * as TO from 'fp-ts/lib/TaskOption';
+import { pipe } from 'fp-ts/lib/function';
 import { InternalException } from 'src/exceptions/InternalException';
 import { PrismaService } from 'src/persistence/prisma/prisma.service';
+import { TaskPotential } from 'src/types/Potential';
 import { CreateUserDto } from '../types/CreateUserDto';
 import { ITokenPayload } from '../types/IAuthEntity';
 import { IPersistedUser } from '../types/IPersistedUser';
@@ -19,52 +21,92 @@ export class PrismaAuthService implements IAuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(createUserDto: CreateUserDto) {
-    const userToCreate = await toUserWithHashedPassword(createUserDto);
-    try {
-      const persistedUser = await this.prismaService.user.create(userToCreate);
-      return toUserResponse(persistedUser);
-    } catch (e) {
-      throw new InternalException('DuplicateEntity', 'Email already exists.');
-    }
+  register(createUserDto: CreateUserDto) {
+    return pipe(
+      createUserDto,
+      toUserWithHashedPassword,
+      TE.flatMap(this.prismaService.user.create),
+      TE.map(toUserResponse),
+    );
   }
 
-  async login(loginUserDto: LoginUserDto) {
-    const user = pipe(
-      await this.prismaService.user.findByEmail(loginUserDto.email),
-      match(throwMissingUserException(loginUserDto.email), identity),
+  login(loginUserDto: LoginUserDto) {
+    const persistedUser = pipe(
+      TO.of(loginUserDto.email),
+      TO.flatMap(this.prismaService.user.findByEmail),
+      TE.fromTaskOption(toMissingUserException(loginUserDto.email)),
     );
 
-    const passwordIsValid = await bcrypt.compare(
-      loginUserDto.password,
-      user.password,
+    const validatedUser = pipe(
+      persistedUser,
+      TE.flatMap(validatePassword(loginUserDto.password)),
     );
 
-    if (!passwordIsValid) {
-      throw new InternalException('InvalidPassword', 'Invalid password');
-    }
-    const payload: ITokenPayload = {
-      userId: user.id,
-    };
-    return {
-      accessToken: this.jwtService.sign(payload),
-    };
+    return pipe(
+      validatedUser,
+      TE.map(userToJwtPayload),
+      TE.map(generateToken(this.jwtService)),
+    );
   }
 }
 
-const throwMissingUserException = (email: string) => () => {
-  throw new InternalException(
+const generateToken = (jwtService: JwtService) => (payload: ITokenPayload) => {
+  const accessToken = jwtService.sign(payload);
+  return { accessToken };
+};
+
+const userToJwtPayload = (user: IPersistedUser): ITokenPayload => {
+  return {
+    userId: user.id,
+  };
+};
+const validatePassword =
+  (passwordInput: string) => (persistedUser: IPersistedUser) => {
+    const passwordIsValid = TE.tryCatchK(
+      () => bcrypt.compare(passwordInput, persistedUser.password),
+      (e) => new InternalException('Unknown', 'Password comparison failed', e),
+    )();
+    return pipe(
+      passwordIsValid,
+      TE.flatMap((isValid) => {
+        return isValid
+          ? TE.right(persistedUser)
+          : TE.left(
+              new InternalException('InvalidPassword', 'Invalid password.'),
+            );
+      }),
+    );
+  };
+
+const toMissingUserException = (email: string) => () => {
+  return new InternalException(
     'MissingEntity',
     `User not found for email: ${email}`,
   );
 };
 
-const toUserWithHashedPassword = async (
+const toUserWithHashedPassword = (
   user: CreateUserDto,
-): Promise<CreateUserDto> => {
-  const hashedPassword = await bcrypt.hash(user.password, 10);
-  return { ...user, password: hashedPassword };
+): TaskPotential<CreateUserDto> => {
+  return pipe(
+    user.password,
+    hashPassword,
+    TE.map(construcUserFromHashedPassword(user)),
+  );
 };
+
+const hashPassword = (password: string): TaskPotential<string> => {
+  return TE.tryCatchK(
+    () => bcrypt.hash(password, 10),
+    (e) => new InternalException('Unknown', 'Password hashing failed', e),
+  )();
+};
+
+const construcUserFromHashedPassword =
+  (user: CreateUserDto) =>
+  (hashedPwd: string): CreateUserDto => {
+    return { ...user, password: hashedPwd };
+  };
 
 const toUserResponse = (user: IPersistedUser): IUserResponseDto => {
   return {

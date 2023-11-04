@@ -24,9 +24,7 @@ export const mapToHttpException = async <T>(fn: T) => {
   }
 };
 
-export const mapToHttpExceptionAndThrow = (e: any) => {
-  if (e instanceof InternalException) {
-    const exceptionConstructor = internalToHttpExceptionMap[e.type];
-    throw new exceptionConstructor(e.message);
-  }
+export const mapToHttpExceptionAndThrow = (e: InternalException) => {
+  const exceptionConstructor = internalToHttpExceptionMap[e.type];
+  throw new exceptionConstructor(e.message);
 };

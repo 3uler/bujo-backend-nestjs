@@ -12,6 +12,6 @@ export class InternalException {
   constructor(
     readonly type: ExceptionType,
     readonly message: string,
-    readonly cause?: Error,
+    readonly cause?: any,
   ) {}
 }

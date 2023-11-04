@@ -1,5 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { mapToHttpException } from 'src/exceptions/ToHttpException';
+import { unwrapTP } from 'src/controllers/utils/ControllerUtils';
 import { AuthService } from '../service/interface/IAuthService';
 import { CreateUserDto } from '../types/CreateUserDto';
 import { LoginUserDto } from '../types/LoginUserDto';
@@ -10,11 +10,11 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
-    return mapToHttpException(this.authService.register(createUserDto));
+    return unwrapTP(this.authService.register(createUserDto));
   }
 
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
-    return mapToHttpException(this.authService.login(loginUserDto));
+    return unwrapTP(this.authService.login(loginUserDto));
   }
 }

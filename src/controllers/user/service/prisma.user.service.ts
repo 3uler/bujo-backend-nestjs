@@ -9,11 +9,11 @@ export class PrismaUserService implements IUserService {
   create(user: CreateUserDto) {
     return this.prismaService.user.create(user);
   }
-  async findByEmail(email: string) {
+  findByEmail(email: string) {
     return this.prismaService.user.findByEmail(email);
   }
 
-  async findById(id: string) {
+  findById(id: string) {
     return this.prismaService.user.findById(id);
   }
 
