@@ -16,3 +16,46 @@ model User {
   email    String  @unique
   password String
 }
+
+model Entry {
+  id       String         @id @default(auto()) @map("_id") @db.ObjectId
+  type     EntryType
+  status   EntryStatus?
+  text     String
+  date     DateTime
+  dateTime EntryDateTime
+  children SubEntry[]
+
+  @@index(date)
+}
+
+type SubEntry {
+  type     EntryType
+  status   EntryStatus?
+  text     String
+  children SubEntry[]
+}
+
+type EntryDateTime {
+  year   Int
+  month  Int
+  day    Int?
+  time   EntryTime?
+}
+
+type EntryTime {
+  hour   Int
+  minute Int
+}
+
+enum EntryType {
+  task
+  note
+  event
+}
+
+enum EntryStatus {
+  done
+  cancelled
+  migrated
+}
