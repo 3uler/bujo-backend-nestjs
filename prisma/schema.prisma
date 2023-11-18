@@ -20,7 +20,7 @@ model User {
 model Entry {
   id       String         @id @default(auto()) @map("_id") @db.ObjectId
   type     EntryType
-  status   EntryStatus?
+  status   EntryStatus
   text     String
   date     DateTime
   dateTime EntryDateTime
@@ -31,9 +31,8 @@ model Entry {
 
 type SubEntry {
   type     EntryType
-  status   EntryStatus?
+  status   EntryStatus
   text     String
-  children SubEntry[]
 }
 
 type EntryDateTime {
@@ -55,6 +54,7 @@ enum EntryType {
 }
 
 enum EntryStatus {
+  open
   done
   cancelled
   migrated
