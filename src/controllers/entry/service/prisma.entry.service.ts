@@ -6,16 +6,15 @@ import { IEntryService } from './interface/IEntryService';
 @Injectable()
 export class PrismaEntryService implements IEntryService {
   constructor(private readonly prismaService: PrismaService) {}
-  create(entry: CreateEntryDto) {
-    return this.prismaService.entry.create(entry);
-  }
-  delete(id: string) {
-    return this.prismaService.entry.delete(id);
-  }
-  find(from: Date, to: Date) {
-    return this.prismaService.entry.find(from, to);
-  }
-  update(id: string, entry: CreateEntryDto) {
-    return this.prismaService.entry.update(id, entry);
+  forUser(userId: string) {
+    return {
+      create: (entry: CreateEntryDto) =>
+        this.prismaService.entry.create(userId, entry),
+      delete: (id: string) => this.prismaService.entry.delete(userId, id),
+      find: (from: Date, to: Date) =>
+        this.prismaService.entry.find(userId, from, to),
+      update: (id: string, entry: CreateEntryDto) =>
+        this.prismaService.entry.update(userId, id, entry),
+    };
   }
 }

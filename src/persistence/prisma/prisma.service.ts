@@ -39,14 +39,14 @@ export class PrismaService implements OnModuleDestroy {
   };
 
   entry = {
-    create: (entry: CreateEntryDto): TaskPotential<IEntry> => {
+    create: (userId: string, entry: CreateEntryDto): TaskPotential<IEntry> => {
       return pipe(
         entry,
         fromDto,
         fromEither,
         TE.flatMap((e) =>
           tryCatchK(
-            () => prisma.entry.create({ data: e }),
+            () => prisma.entry.create({ data: { ...e, userId } }),
             (error) => {
               console.error(error);
               return new InternalException(
@@ -59,23 +59,27 @@ export class PrismaService implements OnModuleDestroy {
         ),
       );
     },
-    update: (id: string, entry: CreateEntryDto): TaskPotential<IEntry> => {
+    update: (
+      userId: string,
+      id: string,
+      entry: CreateEntryDto,
+    ): TaskPotential<IEntry> => {
       return pipe(
         entry,
         fromDto,
         fromEither,
         TE.flatMap((e) =>
           tryCatchK(
-            () => prisma.entry.update({ where: { id }, data: e }),
+            () => prisma.entry.update({ where: { id, userId }, data: e }),
             (error) =>
               new InternalException('Unknown', 'Could not update entry', error),
           )(),
         ),
       );
     },
-    delete: (id: string): TaskPotential<IEntry> => {
+    delete: (userId: string, id: string): TaskPotential<IEntry> => {
       return tryCatchK(
-        () => prisma.entry.delete({ where: { id } }),
+        () => prisma.entry.delete({ where: { id, userId } }),
         () =>
           new InternalException(
             'MissingEntity',
@@ -83,11 +87,12 @@ export class PrismaService implements OnModuleDestroy {
           ),
       )();
     },
-    find: (from: Date, to: Date): TaskPotential<IEntry[]> => {
+    find: (userId: string, from: Date, to: Date): TaskPotential<IEntry[]> => {
       return tryCatchK(
         () =>
           prisma.entry.findMany({
             where: {
+              userId,
               date: {
                 gte: from,
                 lte: to,
