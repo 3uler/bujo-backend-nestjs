@@ -19,6 +19,7 @@ model User {
 
 model Entry {
   id       String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String         @db.ObjectId
   type     EntryType
   status   EntryStatus
   text     String
