@@ -32,8 +32,9 @@ const toDate = (dateTime: EntryDateTime): Potential<Date> => {
       );
 };
 
-const parseAsDateTime = (date: string) => DateTime.fromISO(date);
+const parseAsDateTime = (date: string) =>
+  DateTime.fromFormat(date, 'yyyy-M-d', { zone: 'utc' });
 
 const toDateString = (dateTime: EntryDateTime) => {
-  return `${dateTime.year}-${dateTime.month}-${dateTime.day ?? 1}T00:00:00Z`;
+  return `${dateTime.year}-${dateTime.month}-${dateTime.day ?? 1}`;
 };
