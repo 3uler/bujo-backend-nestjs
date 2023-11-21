@@ -9,7 +9,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import * as dayjs from 'dayjs';
+import { DateTime } from 'luxon';
 import { JwtAuthGuard } from 'src/controllers/auth/jwt.auth.guard';
 import { RequestWithUser } from 'src/controllers/types/RequestWithUser';
 import { unwrapTP } from 'src/controllers/utils/ControllerUtils';
@@ -43,8 +43,8 @@ export class EntryController {
 
   @Get()
   async find(@Query() query: FindEntryQuery, @Req() req: RequestWithUser) {
-    const from = dayjs(query.from).toDate();
-    const to = dayjs(query.to).toDate();
+    const from = DateTime.fromISO(query.from, { zone: 'utc' }).toJSDate();
+    const to = DateTime.fromISO(query.to, { zone: 'utc' }).toJSDate();
     return unwrapTP(this.entryService.forUser(req.user.id).find(from, to));
   }
 }

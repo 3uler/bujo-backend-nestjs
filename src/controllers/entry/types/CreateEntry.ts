@@ -1,6 +1,6 @@
-import * as dayjs from 'dayjs';
 import { left, map, right } from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/function';
+import { DateTime } from 'luxon';
 import { InternalException } from 'src/exceptions/InternalException';
 import { Potential } from 'src/types/Potential';
 import { CreateEntryDto } from './CreateEntryDto';
@@ -21,9 +21,9 @@ export const fromDto = (
 };
 
 const toDate = (dateTime: EntryDateTime): Potential<Date> => {
-  const date = pipe(dateTime, toDateString, parseAsDayjs);
-  return date.isValid()
-    ? right(date.toDate())
+  const date = pipe(dateTime, toDateString, parseAsDateTime);
+  return date.isValid
+    ? right(date.toJSDate())
     : left(
         new InternalException(
           'InvalidArgument',
@@ -32,8 +32,8 @@ const toDate = (dateTime: EntryDateTime): Potential<Date> => {
       );
 };
 
-const parseAsDayjs = (date: string) => dayjs(date, 'YYYY-M-D', true);
+const parseAsDateTime = (date: string) => DateTime.fromISO(date);
 
 const toDateString = (dateTime: EntryDateTime) => {
-  return `${dateTime.year}-${dateTime.month}-${dateTime.day ?? 1}`;
+  return `${dateTime.year}-${dateTime.month}-${dateTime.day ?? 1}T00:00:00Z`;
 };
