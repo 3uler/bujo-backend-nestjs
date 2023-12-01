@@ -235,6 +235,7 @@ components:
         - done
         - cancelled
         - migrated
+        - open
       example: done
     entryTime:
       type: object
@@ -288,6 +289,7 @@ components:
       required:
         - type
         - text
+        - status
 
     subEntryWithChildren:
       allOf:
